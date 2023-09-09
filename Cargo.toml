@@ -1,8 +1,8 @@
+
 [package]
-authors = ["Jan Hohenheim <jan@hohenheim.ch>"]
+name = "bevy_game"
+version = "0.1.0"
 edition = "2021"
-name = "foxtrot"
-version = "0.2.0"
 license = "MIT OR Apache-2.0"
 exclude = [
     "dist",
@@ -19,16 +19,35 @@ keywords = ["gamedev", "bevy", "template", "game"]
 categories = ["game-development"]
 homepage = "https://janhohenheim.github.io/foxtrot/"
 
+# Enable a small amount of optimization in debug mode
+[profile.dev]
+opt-level = 1
+
+# Enable high optimizations for dependencies (incl. Bevy), but not for our code:
+[profile.dev.package."*"]
+opt-level = 1
+
+
+# # Enable a small amount of optimization in debug mode
+# [profile.release]
+# opt-level = 3
+
+
 [features]
 default = ["dev"]
-dev = ["dep:bevy_editor_pls", "dep:bevy_prototype_debug_lines"]
+dev = [
+# "dep:bevy_editor_pls"  # , "dep:bevy_prototype_debug_lines"
+]
 tracing = ["bevy/trace_chrome"]
 
 [dependencies]
-bevy_kira_audio = "0.15"
-bevy_asset_loader = { version = "0.16", features = ["progress_tracking"] }
-bevy_common_assets = { version = "0.6", features = ["ron", "toml"] }
-bevy_egui = "0.20"
+rust_utils = {path = "../rust_utils"}
+bevy_utils = {path = "../bevy_utils"}
+
+# bevy_kira_audio = "0.15"
+# bevy_asset_loader = { version = "0.16", features = ["progress_tracking"] }
+# bevy_common_assets = { version = "0.6", features = ["ron", "toml"] }
+# bevy_egui = "0.20"
 serde = { version = "1", features = ["derive"] }
 indexmap = { version = "1", features = ["serde-1"] }
 strum = "0.24"
@@ -37,28 +56,41 @@ ron = "0.8"
 regex = "1"
 chrono = "0.4"
 glob = "0.3"
-oxidized_navigation = "0.4"
 bitflags = "2"
-iyes_progress = "0.8"
+# iyes_progress = "0.8"
 unicode-segmentation = "1"
 anyhow = "1"
-leafwing-input-manager = { version = "0.9", features = ["egui"] }
-warbler_grass = "0.3"
+# leafwing-input-manager = { version = "0.9" }
+# warbler_grass = "0.3"
 rand = { version = "0.8", features = ["small_rng", "nightly"] }
-bevy_dolly = { git = "https://github.com/BlackPhlox/bevy_dolly", rev = "b2f5dc787664cb8c3d92f792cbd437886fc090c6" }
-spew = "0.2.1"
-bevy_mod_sysfail = "2"
-seldom_fn_plugin = "0.3"
-bevy_rapier3d = { version = "0.21", features = [ "serde-serialize", "simd-nightly",] }
-bevy_editor_pls = { version = "0.4", optional = true }
-bevy_prototype_debug_lines = { version = "0.10", optional = true, features = [ "3d" ] }
+bevy_dolly = { git = "https://github.com/BlackPhlox/bevy_dolly", rev = "ff6e18f4f4b1c08a85031a9b6c3fdbce8b7dfa27" }
+# spew = "0.2.1"
+# bevy_mod_sysfail = "2"
+# seldom_fn_plugin = "0.3"
+# bevy_rapier3d = { version = "0.21", features = [ "serde-serialize"] }
+# bevy_editor_pls = { version = "0.4", optional = true }
+# bevy_prototype_debug_lines = { version = "0.10", optional = true, features = [ "3d" ] }
 
 # keep the following in sync with Bevy's dependencies
 winit = { version = "0.28", default-features = false }
 image = { version = "0.24", default-features = false }
+bevy_rapier3d = "0.22.0"
+spew = "0.3.0"
+oxidized_navigation = "0.6.0"
+seldom_fn_plugin = "0.4.0"
+bevy_asset_loader = "0.17.0"
+bevy_common_assets = "0.7.0"
+bevy_hanabi = "0.7.0"
+bevy_kira_audio = "0.17.0"
+iyes_progress = "0.9.1"
+leafwing-input-manager = "0.10.0"
+bevy_mod_sysfail = "3.0.0"
+bevy_panorbit_camera = "0.8.0"
+# bevy_editor_pls = "0.4.0"
+# warbler_grass = "0.3.2"
 
 [dependencies.bevy]
-version = "0.10.1"
+version = "0.11.2"
 default-features = false
 features = [
     "animation",
@@ -71,7 +103,7 @@ features = [
     "bevy_render",
     "bevy_sprite",
     "bevy_text",
-    "bevy_ui",
+    # "bevy_ui",
     "png",
     "jpeg",
     "hdr",
@@ -83,23 +115,23 @@ features = [
 ]
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies.bevy]
-version = "0.10.1"
+# version = "0.11.2"
 default-features = false
 features = [ "filesystem_watcher" ]
 
 
 [target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies.bevy]
-version = "0.10.1"
+version = "0.11.2"
 default-features = false
 features = [ "bevy_dylib" ]
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-bevy_hanabi = "0.6"
-bevy_rapier3d = { version = "0.21", features = ["parallel"] }
+# bevy_hanabi = "0.6"
+# bevy_rapier3d = { version = "0.21", features = ["parallel"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = "0.2"
-bevy_rapier3d = { version = "0.21", features = ["wasm-bindgen"] }
+# bevy_rapier3d = { version = "0.21", features = ["wasm-bindgen"] }
 
 [build-dependencies]
 embed-resource = "2.1"
