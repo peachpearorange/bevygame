@@ -1,23 +1,8 @@
 use {bevy::{prelude::{Input, KeyCode, Res, *},
             utils::HashSet},
-     bevy_fn_plugin::bevy_plugin,
-     leafwing_input_manager::{plugin::InputManagerSystem, user_input::UserInput}};
+     bevy_fn_plugin::bevy_plugin};
 
 use bevy::input::{keyboard::keyboard_input_system, InputPlugin};
-
-// fn pressed_keys(Res<Input>)->HashSet<KeyCode>{
-//   bevy::input::gamepad
-//     InputManagerPlugin
-//     InputManagerBundle
-//     InputManagerSystem
-// }
-// .add_plugin(InputManagerPlugin::<Action>::default())
-
-#[derive(Hash, Clone, Copy, PartialEq, Eq, Debug)]
-enum Action {
-  Jump,
-  Run
-}
 fn log_inputs(keys: Res<Input<KeyCode>>) {
   keys.get_just_pressed().for_each(|k| {
                            println!("{} was pressed!",
@@ -63,8 +48,6 @@ use {bevy::prelude::*, leafwing_input_manager::prelude::*};
 //             .add_system(jump)
 //             .run();
 // }
-#[derive(Component)]
-struct Player;
 
 // fn spawn_player(mut commands: Commands) {
 //   commands.spawn(InputManagerBundle::<Action> { // Stores "which actions are currently pressed"
@@ -84,12 +67,12 @@ struct Player;
 //   }
 // }
 
-pub enum GameControl {
-  Up,
-  Down,
-  Left,
-  Right
-}
+// pub enum GameControl {
+//   Up,
+//   Down,
+//   Left,
+//   Right
+// }
 impl GameControl {
   pub fn pressed(&self, keyboard_input: &Res<Input<KeyCode>>) -> bool {
     let p = |k| keyboard_input.pressed(k);
@@ -101,7 +84,6 @@ impl GameControl {
     }
   }
 }
-
 // pub fn get_movement(control: GameControl, input: &Res<Input<KeyCode>>) -> f32 {
 //   if control.pressed(input) {
 //     1.0
@@ -133,3 +115,13 @@ impl GameControl {
 //     actions.player_movement = None;
 //   }
 // }
+
+#[derive(Resource, Default)]
+pub struct PressedKeys(pub HashSet<KeyCode>);
+fn get_pressed_keys_system(mut r: ResMut<PressedKeys>, i: Res<Input<KeyCode>>) {
+  *r.0 = i.get_pressed().collect();
+}
+pub fn get_pressed_keys_plugin(app: &mut App) {
+  app.init_resource::<PressedKeys>()
+     .add_system(get_pressed_keys_system);
+}

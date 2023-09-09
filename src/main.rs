@@ -14,7 +14,7 @@ use crate::{game::game_plugin, loading::LoadingPlugin};
 use {bevy::gltf::Gltf, bevy_asset_loader::prelude::*};
 use {bevy::window, bevy_panorbit_camera::PanOrbitCamera};
 
-pub mod foxtrot;
+// pub mod foxtrot;
 pub mod gamething;
 // pub mod tests;
 
@@ -38,12 +38,11 @@ use {bevy::{prelude::*, window::PrimaryWindow, winit::WinitWindows, DefaultPlugi
      bevy_rapier3d::prelude::*,
      // bundles::player,
      rust_utils::comment,
-     std::io::Cursor,
      winit::window::Icon};
 // todo: figure out how to load gltf files
 #[bevy_main]
 pub fn main() {
-  println!("{}", reverse_string("asdfg".into()));
+  // println!("{}", reverse_string("asdfg".into()));
   App::new()
           .add_plugins(DefaultPlugins.set(AssetPlugin { watch_for_changes: true,
                                                         ..default() })
@@ -59,9 +58,9 @@ pub fn main() {
           // .insert_resource(game::generate_level())
           // .add_startup_system(game::init)
           // .add_system(rotate_camera)
-          .fn_plugin(game_plugin)
           .fn_plugin(input::keylogger)
-          // .add_plugin(input::KeyLogger)
+          .fn_plugin(input::get_pressed_keys_plugin)
+          .fn_plugin(game_plugin)
           .add_plugins(PhysicsPlugins::default())
           // .add_plugin(bevy_fps_controller::controller::FpsControllerPlugin)
           .add_plugin(bevy_panorbit_camera::PanOrbitCameraPlugin)

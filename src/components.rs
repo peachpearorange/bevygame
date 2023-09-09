@@ -1,5 +1,6 @@
 use bevy::{ecs::system::{SystemParam, SystemState},
-           prelude::{Component, Entity, Input, KeyCode, Name, Query, Res, Transform, World},
+           prelude::{Color, Component, Entity, Input, KeyCode, Name, Query, Res, Transform,
+                     World},
            utils::HashMap};
 #[derive(Component)]
 pub struct Crafter;
@@ -31,11 +32,6 @@ pub struct Player;
 pub enum Interact {
   GiveItem(Entity),
   AddMessage(String)
-}
-#[derive(Component)]
-pub struct Tile {
-  pub is_wall: bool,
-  pub bg_color: &'static str
 }
 #[derive(Component)]
 pub struct Combat {
@@ -77,7 +73,7 @@ pub struct Name(String);
 #[derive(Component, Default)]
 pub struct Tile {
   walkable: bool,
-  color: String
+  color: Color
 }
 #[derive(Component)]
 pub struct Fire {

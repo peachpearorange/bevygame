@@ -42,7 +42,7 @@ tracing = ["bevy/trace_chrome"]
 
 [dependencies]
 rust_utils = {path = "../rust_utils"}
-bevy_utils = {path = "../bevy_utils"}
+# bevy_utils = {path = "../bevy_utils"}
 
 # bevy_kira_audio = "0.15"
 # bevy_asset_loader = { version = "0.16", features = ["progress_tracking"] }

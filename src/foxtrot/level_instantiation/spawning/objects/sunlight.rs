@@ -1,11 +1,10 @@
-use crate::level_instantiation::spawning::GameObject;
+use crate::foxtrot::level_instantiation::spawning::GameObject;
 
-use bevy::pbr::CascadeShadowConfigBuilder;
-use bevy::prelude::*;
+use bevy::{pbr::CascadeShadowConfigBuilder, prelude::*};
 
 pub(crate) fn spawn(In(transform): In<Transform>, mut commands: Commands) {
-    // directional 'sun' light
-    commands.spawn((
+  // directional 'sun' light
+  commands.spawn((
         DirectionalLightBundle {
             directional_light: DirectionalLight {
                 shadows_enabled: true,
