@@ -2,7 +2,6 @@ use {crate::{actions::{set_movement_actions, Actions},
              loading::AudioAssets,
              GameState},
      bevy::prelude::*,
-     bevy_fn_plugin::bevy_plugin,
      bevy_kira_audio::prelude::*};
 
 // This plugin is responsible to control the game audio
@@ -31,16 +30,14 @@ fn control_flying_sound(actions: Res<Actions>,
                         mut audio_instances: ResMut<Assets<AudioInstance>>) {
   if let Some(instance) = audio_instances.get_mut(&audio.0) {
     match instance.state() {
-      PlaybackState::Paused { .. } => {
+      PlaybackState::Paused { .. } =>
         if actions.player_movement.is_some() {
           instance.resume(AudioTween::default());
-        }
-      }
-      PlaybackState::Playing { .. } => {
+        },
+      PlaybackState::Playing { .. } =>
         if actions.player_movement.is_none() {
           instance.pause(AudioTween::default());
-        }
-      }
+        },
       _ => {}
     }
   }

@@ -5,8 +5,6 @@ use {crate::components::{AttackPlayer, Char, *},
             prelude::Name},
      std::borrow::Cow};
 
-fn name(s: &'static str) -> Name { Name::new(s) }
-
 // const PLAYER: (Char, Name, Container, Combat, Player) =
 //   (Char('😔'), Name::from("player"), CONTAINEREMPTY, Combat { hp: 300, damage: 2 }, Player);
 pub fn player() -> (Char, Name, Container, Combat, Player) {

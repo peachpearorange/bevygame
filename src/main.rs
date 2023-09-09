@@ -5,14 +5,12 @@
 #![feature(type_alias_impl_trait)]
 #![allow(unused_mut)]
 
-use bevy::asset::LoadState;
-use seldom_fn_plugin::FnPluginExt;
-// use bevy_utils::{BevyWrapper, Events, EventWriter};
-// use bevy_xpbd_3d::plugins::PhysicsPlugins;
+use {bevy::asset::LoadState, seldom_fn_plugin::FnPluginExt};
 
-use crate::{game::game_plugin, loading::LoadingPlugin};
-use {bevy::gltf::Gltf, bevy_asset_loader::prelude::*};
-use {bevy::window, bevy_panorbit_camera::PanOrbitCamera};
+use {crate::game::game_plugin,
+     bevy::{gltf::Gltf, window},
+     bevy_asset_loader::prelude::*,
+     bevy_panorbit_camera::PanOrbitCamera};
 
 // pub mod foxtrot;
 pub mod gamething;
@@ -29,12 +27,14 @@ pub mod input;
 // // mod audio;
 // // mod menu;
 pub mod loading;
+pub mod lunarlander3d;
+pub mod menu;
 // pub mod text2d;
 
 // use bevy_game::GamePlugin; // ToDo: Replace bevy_game with your new crate name.
 use {bevy::{prelude::*, window::PrimaryWindow, winit::WinitWindows, DefaultPlugins},
-     bevy_fn_plugin::bevy_plugin,
-     bevy_fps_controller, bevy_panorbit_camera,
+     bevy_fps_controller,
+     bevy_panorbit_camera,
      bevy_rapier3d::prelude::*,
      // bundles::player,
      rust_utils::comment,
@@ -66,6 +66,7 @@ pub fn main() {
           .add_plugin(bevy_panorbit_camera::PanOrbitCameraPlugin)
           // .add_plugin(lunarlander3d::LunarLander)
           // .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
+          .add_startup_system(spawn_planets_and_lunar_lander)
           .add_startup_system(spawn_stuff)
           .add_plugin(loading_plugin)
           .add_plugin(game_plugin)
@@ -83,7 +84,7 @@ pub fn main() {
 //   let mut b: String = "aka".into();
 //   (&mut a, &mut b) = ("a".to_string(), "5".to_string());
 // }
-fn rotate_camera(mut c:Query::<&mut Transform, With<Camera>>) {
+fn rotate_camera(mut c: Query<&mut Transform, With<Camera>>) {
   c.for_each_mut(|mut c| c.rotate(Quat::from_array([0.3, 0.5, 0.2, 0.6]).normalize()));
 }
 // fn rotate_camera(mut cameras: Query<&mut Transform, With<Camera>>) {
@@ -113,28 +114,30 @@ fn spawn_stuff(mut c: Commands,
                assets_gltf: Res<Assets<Gltf>>,
                asset_server: Res<AssetServer>,
                mut materials: ResMut<Assets<StandardMaterial>>) {
-  c.get_or_spawn(entity)
+  // c.get_or_spawn(entity)
   /* Create the ground. */
   c.spawn((Collider::cuboid(100.0, 0.1, 100.0),
            TransformBundle::from(Transform::from_xyz(0.0, -2.0, 0.0))));
   /* Create the bouncing ball. */
-  let TransformBundle { local, global } = TransformBundle::from(Transform::from_xyz(0.0, 4.0, 0.0));
+  let TransformBundle { local, .. } =
+    TransformBundle::from(Transform::from_xyz(0.0, 4.0, 0.0));
+  let ico = Mesh::try_from(shape::Icosphere { radius: 0.5,
+                                              subdivisions: 20 }).unwrap();
   c.spawn((RigidBody::Dynamic,
            Collider::ball(0.5),
-           Restitution::coefficient(0.7),
            // TransformBundle::from(Transform::from_xyz(0.0, 4.0, 0.0)),
-           PbrBundle { mesh:
-                         meshes.add(Mesh::try_from(shape::Icosphere { radius: 0.5,
-                                                                      subdivisions: 20 }).unwrap()),
+           PbrBundle { mesh: meshes.add(ico),
                        transform: local,
-                       global_transform: global,
                        ..default() }));
   // plane
   c.spawn(PbrBundle { mesh: meshes.add(shape::Plane::from_size(5.0).into()),
                       material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
                       ..default() });
   // cube
-  c.spawn(PbrBundle { mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
+  // let player_shape = shape::Capsule{ radius: todo!(), rings: todo!(), depth: todo!(), latitudes: todo!(), longitudes: todo!(), uv_profile: todo!() }
+  let cube = |size| Mesh::from(shape::Cube { size });
+  let cube_mesh_handle = meshes.add(cube(1.0));
+  c.spawn(PbrBundle { mesh: cube_mesh_handle,
                       material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
                       transform: Transform::from_xyz(0.0, 0.5, 0.0),
                       ..default() });
@@ -144,10 +147,9 @@ fn spawn_stuff(mut c: Commands,
                                                        ..default() },
                              transform: Transform::from_xyz(4.0, 8.0, 4.0),
                              ..default() });
-  // Events::drain()
-  // EVENTWRITER::SEND_BATCH()
-  C.SPAWN((Camera3dBundle { transform: Transform::from_xyz(-3.0, 3.0, 10.0).looking_at(Vec3::ZERO,
-                                                                                       Vec3::Y),
+  c.spawn((Camera3dBundle { transform:
+                              Transform::from_xyz(-3.0, 3.0, 10.0).looking_at(Vec3::ZERO,
+                                                                              Vec3::Y),
                             ..Default::default() },
            PanOrbitCamera { orbit_sensitivity: 1.5,
                             orbit_smoothness: 0.5,

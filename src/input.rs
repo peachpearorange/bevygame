@@ -1,6 +1,5 @@
-use {bevy::{prelude::{Input, KeyCode, Res, *},
-            utils::HashSet},
-     bevy_fn_plugin::bevy_plugin};
+use bevy::{prelude::{Input, KeyCode, Res, *},
+           utils::HashSet};
 
 use bevy::input::{keyboard::keyboard_input_system, InputPlugin};
 fn log_inputs(keys: Res<Input<KeyCode>>) {

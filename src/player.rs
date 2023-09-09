@@ -1,7 +1,6 @@
 // loading::TextureAssets,
 use {crate::{actions::Actions, GameState},
-     bevy::prelude::*,
-     bevy_fn_plugin::bevy_plugin};
+     bevy::prelude::*};
 
 /// This plugin handles player related stuff like movement
 /// Player logic is only active during the State `GameState::Playing`

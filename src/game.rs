@@ -1,8 +1,4 @@
-use {crate::foxtrot::{bundles::*,
-             components::{self, Char, Container, EnemyMovement, Player, RandomMovement},
-             input,
-             tiles::{self, Tile, *}},
-     bevy::{ecs::{schedule,
+use {bevy::{ecs::{schedule,
                   system::{EntityCommands, WithEntity},
                   world::EntityMut},
             gltf::Gltf,
@@ -12,9 +8,8 @@ use {crate::foxtrot::{bundles::*,
             scene::SceneInstance,
             utils::{petgraph::algo::matching, HashMap},
             window::WindowResolution},
-     bevy_ecs_tilemap::{tiles::TileBundle, TilemapBundle},
+     // bevy_ecs_tilemap::{tiles::TileBundle, TilemapBundle},
      bevy_egui::{self, egui, EguiContexts, EguiPlugin},
-     bevy_fn_plugin::bevy_plugin,
      bevy_fps_controller::controller::*,
      bevy_inspector_egui::egui::style::Visuals,
      bevy_rapier2d::prelude::*,
@@ -22,21 +17,20 @@ use {crate::foxtrot::{bundles::*,
                      parry::query::sat::triangle_segment_find_local_separating_normal_oneway,
                      prelude::{NoUserData, RapierPhysicsPlugin},
                      render::RapierDebugRenderPlugin},
-     bevy_xpbd_3d::prelude::*,
      cascade::cascade,
      itertools::{iterate, Itertools},
      ndarray::{Array3, ArrayBase},
      rand::thread_rng,
-     rust_utils::{add_array, aint, change, coll_max, comment, sub_array},
+     rust_utils::{add_array, aint, change, comment, sub_array},
      std::{fmt::Debug,
            ops::{Add, DerefMut, Sub}}};
 
 mod spell {
-  struct Effect<C: Component,F:FnOnce(C) -> C>(F);
+  struct Effect<C: Component, F: FnOnce(C) -> C>(F);
   struct Effects(Vec<Effect>);
   enum Target {
     Other,
-    Self,
+    SelfTarget,
     NoTarget
   }
   struct Spell {
@@ -92,7 +86,9 @@ fn generate_low_poly_3d_planet() -> Mesh {
   };
   let rand = || rand::random::<f32>();
   let id_to_adj_and_quat: HashMap<Id, (Vec<Id>, Quat)> =
-    vert_ids.map(|id| (id, (pick_adj(&id), Quat::from_array(default().map(|_| rand())).normalize())))
+    vert_ids.map(|id| {
+              (id, (pick_adj(&id), Quat::from_array(default().map(|_| rand())).normalize()))
+            })
             .collect();
   let insert = |mut m, k, v| {
     m.insert(k, v);
@@ -100,7 +96,8 @@ fn generate_low_poly_3d_planet() -> Mesh {
   };
   let good_quats = iterate_n_times(id_to_adj_and_quat,
                                    |q| {
-                                     let (id, (adj, quat)) = q.get_key_value(pick(vert_ids)).unwrap();
+                                     let (id, (adj, quat)) =
+                                       q.get_key_value(pick(vert_ids)).unwrap();
                                      let adj_quats = adj.iter().map(|id| q.get(id).unwrap());
                                      let q1 = q1.normalize();
                                      let q2 = q2.normalize();
@@ -164,7 +161,9 @@ impl TileMap {
       }
     }
   }
-  fn remove_entity(&mut self, c: &Pos, e: Entity) { self.0.get_mut(c).unwrap().contents.remove(&e); }
+  fn remove_entity(&mut self, c: &Pos, e: Entity) {
+    self.0.get_mut(c).unwrap().contents.remove(&e);
+  }
   fn transfer(&mut self, c1: &Pos, c2: &Pos, e: Entity) {
     self.remove_entity(c1, e);
     self.add_entity(c2, e)
@@ -189,8 +188,7 @@ struct TryToMove(Entity, Dir);
 fn random_movement(es: Query<Entity, With<RandomMovement>>, mut ev: EventWriter<TryToMove>) {
   es.for_each(|e| ev.send(TryToMove(e, pick([[1, 0], [-1, 0], [0, 1], [0, -1]]))));
 }
-use {bevy::prelude::Entity,
-     rust_utils::{set, Coll, CollConditions}};
+use bevy::prelude::Entity;
 // 2d physics???
 
 fn spawn_meshes(mut c: Commands,

@@ -3,8 +3,8 @@ use bevy::asset::{Asset, HandleId};
 // bevy_rapier3d::prelude::*
 use {crate::comment, bevy::gltf::Gltf};
 
-use {bevy::prelude::*, bevy_asset_loader::prelude::*, bevy_fn_plugin::bevy_plugin,
-     bevy_kira_audio::AudioSource, bevy_xpbd_3d::prelude::*};
+use {bevy::prelude::*, bevy_asset_loader::prelude::*, bevy_kira_audio::AudioSource,
+     seldom_fn_plugin};
 
 // while asset_server.get_load_state(&m) != LoadState::Loaded {}
 // #[derive(Resource)]

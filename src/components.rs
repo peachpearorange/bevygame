@@ -1,6 +1,6 @@
+pub use bevy::prelude::Name;
 use bevy::{ecs::system::{SystemParam, SystemState},
-           prelude::{Color, Component, Entity, Input, KeyCode, Name, Query, Res, Transform,
-                     World},
+           prelude::{Color, Component, Entity, Input, KeyCode, Query, Res, Transform, World},
            utils::HashMap};
 #[derive(Component)]
 pub struct Crafter;
@@ -67,9 +67,10 @@ impl std::ops::Sub<Dir> for Coord {
 impl From<(i32, i32)> for Coord {
   fn from((a, b): (i32, i32)) -> Self { Coord([a, b]) }
 }
-// components
-#[derive(Component, Default)]
-pub struct Name(String);
+
+fn name(s: &'static str) -> Name { Name::new(s) }
+// #[derive(Component, Default)]
+// pub struct Name(String);
 #[derive(Component, Default)]
 pub struct Tile {
   walkable: bool,
