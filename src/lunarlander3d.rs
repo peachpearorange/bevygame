@@ -20,6 +20,8 @@
 //      rand::thread_rng,
 //      rust_utils::{change, coll_max}};
 
+use bevy::render::render_resource::AsBindGroupShaderType;
+
 use {bevy::prelude::*, bevy_panorbit_camera::PanOrbitCamera, bevy_rapier3d::prelude::*};
 
 fn print_ball_altitude(positions: Query<&Transform, With<RigidBody>>) {
@@ -34,7 +36,7 @@ type PlanetBundle = (RigidBody,
            PbrBundle { mesh: meshes.add(ico),
                        transform: local,
                        ..default() })
-fn planet(pos:Coord,radius:f32)->
+// fn planet(pos:Coord,radius:f32)->
 // struct PlanetBundle{
 //   (RigidBody::Dynamic,
 //            Collider::ball(0.5),
@@ -49,18 +51,21 @@ fn spawn_planets_and_lunar_lander(mut c: Commands,
                                   assets_gltf: Res<Assets<Gltf>>,
                                   asset_server: Res<AssetServer>,
                                   mut materials: ResMut<Assets<StandardMaterial>>) {
-
-  MaterialMeshBundle
   let planet = |pos:[f32;3],radius:f32| {
-    };
-  (RigidBody::Fixed,
-   Collider::ball(0.5),
-   Transform::from_translation(Vec3::from_array(pos))
-           PbrBundle { mesh: meshes.add(ico),
-                       transform: local,
+    let mesh_handle = meshes.add(Mesh::try_from(shape::Icosphere { radius: 0.5,
+                                              subdivisions: 20 }).unwrap());
+    let planet_material = StandardMaterial::from(Image);
+    (RigidBody::Fixed,
+     Collider::ball(radius),
+     Transform::from_translation(Vec3::from_array(pos))
+     meshes.ad
+     PbrBundle { mesh: meshes.add(ico),
+                 transform: local,
+                 material: StandardMaterial::,
 
-                       // ..default()
-           })
+     })
+  };
+
   /* Create the ground. */
   c.spawn((Collider::cuboid(100.0, 0.1, 100.0),
            TransformBundle::from(Transform::from_xyz(0.0, -2.0, 0.0))));
