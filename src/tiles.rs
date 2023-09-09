@@ -4,15 +4,7 @@ use bevy::{ecs::query::ReadOnlyWorldQuery,
 
 use crate::foxtrot::components::{self, Char, Container};
 
-#[derive(Clone, Default)]
-pub struct Tile {
-  pub is_wall: bool,
-  pub bg_color: &'static str,
-  pub name: &'static str,
-  pub char: Option<char>,
-  pub contents: HashSet<Entity>
-}
-pub type TileBundle = (components::Tile, Name, Char, Container);
+// pub type TileBundle = (components::Tile, Name, Char, Container);
 // fn tile(is_wall: bool, bg_color: &'static str, name: &'static str, char: Option<char>) -> TileBundle {
 //   (components::Tile { is_wall, bg_color }, Name::name, Char::char, Container::default())
 // }

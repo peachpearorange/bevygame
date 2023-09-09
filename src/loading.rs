@@ -14,31 +14,10 @@ struct Number(u32);
 fn load_meshes(asset_server: Res<AssetServer>) {
   let lander = asset_server.load::<Mesh, _>("lunarlander.gltf");
 }
-fn spawn_meshes(mut c: Commands,
-                mut meshes: ResMut<Assets<Mesh>>,
-                mut number: ResMut<Number>,
-                mut materials: ResMut<Assets<StandardMaterial>>) {
-  if number.0 < 1 {
-    number.0 += 1;
-    let rand = || rand::random::<f32>();
-    meshes.iter()
-          .for_each(|(id, _)| {
-            let h = meshes.get_handle(id);
-            c.spawn((RigidBody::Dynamic,
-                     Collider::from_bevy_mesh(meshes.get(&h).unwrap(), &ComputedColliderShape::ConvexDecomposition(default())).unwrap(),
-                     Restitution::coefficient(0.7),
-                     PbrBundle { mesh: h,
-                                 material: materials.add(Color::rgb(rand(), rand(), rand()).into()),
-                                 transform: Transform::from_xyz(10.0 + rand(),
-                                                                rand() * 8.0 - 4.0,
-                                                                rand() * 8.0 - 4.0),
-                                 ..default() }));
-          });
-  }
-}
-#[bevy_plugin]
-pub fn LoadingPlugin(app: &mut App) {
-  app.add_startup_system(load_meshes)
+pub fn loading_plugin(app: &mut App) {
+  app
+     // .add_collection_to_loading_state::<_, _>()
+     .add_startup_system(load_meshes)
      .init_resource::<Number>()
      .add_system(spawn_meshes);
 }

@@ -32,7 +32,7 @@ use {crate::foxtrot::{bundles::*,
            ops::{Add, DerefMut, Sub}}};
 
 mod spell {
-  struct Effect<C: Component>(Box<dyn Fn(C) -> C>);
+  struct Effect<C: Component,F:FnOnce(C) -> C>(F);
   struct Effects(Vec<Effect>);
   enum Target {
     Other,
@@ -81,69 +81,7 @@ mod spell {
 //                               ui.label("world");
 //                             });
 // }
-// NUMBER OF DIMENSIONS???
-const DIMS: usize = 2;
 
-#[derive(Component, Hash, PartialEq, Eq, Copy, Clone, Deref, DerefMut, Default)]
-pub struct Pos([i32; DIMS]);
-impl Pos {
-  fn map(self, f: impl Fn(i32) -> i32) -> Self { rust_utils::change(self, |inner| inner.map(f)) }
-}
-impl Add<Dir> for Pos {
-  type Output = Self;
-  fn add(self, rhs: Dir) -> Self::Output { change(self, |inner| add_array(inner, rhs)) }
-}
-impl Sub<Pos> for Pos {
-  type Output = Self;
-  fn sub(self, rhs: Self) -> Self { change(self, |inner| rust_utils::sub_array(inner, *rhs)) }
-}
-impl From<(i32, i32)> for Pos {
-  fn from((a, b): (i32, i32)) -> Self { Pos([a, b]) }
-}
-const CHUNK_SIDE_LENGTH: usize = 16;
-pub struct Chunk(Array2<crate::foxtrot::tiles::Tile>);
-impl Default for Chunk {
-  fn default() -> Self { Self(Array2::from_elem([CHUNK_SIDE_LENGTH; DIMS], default())) }
-}
-#[derive(Default, Resource)]
-pub struct ChunkMap(HashMap<[i32; DIMS], Chunk>);
-pub fn generate_level() -> ChunkMap {
-  ChunkMap(HashMap::from([([0, 0],
-                           Chunk(cascade! {Chunk::default().0;
-                           ..iter_mut().for_each(|t| rust_utils::set(t,tiles::rock()) );}))]))
-}
-
-// fn update<C: Component>(c: &mut C, f: impl FnOnce(C) -> C) { take(c, f); }
-// fn set<C: Component>(c: &mut C, v: C) { *c = v; }
-
-// systems
-fn player_movement() {}
-use {itertools::{self, iproduct},
-     ndarray::Array2};
-
-fn adjacents(pos: &Pos) -> Vec<Pos> {
-  let Pos([x, y]) = pos;
-  let around = |v| v - 1..=v + 1;
-  iproduct!(around(x), around(y)).map(Pos::from)
-                                 .filter(aint(pos))
-                                 .collect()
-}
-fn pick<T>(coll: impl IntoIterator<Item = T>) -> T {
-  rand::seq::IteratorRandom::choose(coll.into_iter(), &mut thread_rng()).unwrap()
-}
-fn pick_multiple<T>(coll: impl IntoIterator<Item = T>, n: usize) -> Vec<T> {
-  rand::seq::IteratorRandom::choose_multiple(coll.into_iter(), &mut thread_rng(), n)
-}
-fn iterate_until<T>(mut val: T, f: impl Fn(T) -> T, conditionf: impl Fn(&T) -> bool) -> T {
-  while !conditionf(&val) {
-    val = f(val);
-  }
-  val
-}
-fn iterate_n_times<T>(val: T, f: impl Fn(T) -> T, n: u32) -> T {
-  let (val, _) = iterate_until((val, 0), |(val, k)| (f(val), k + 1), |(_, k)| *k == n);
-  val
-}
 fn generate_low_poly_3d_planet() -> Mesh {
   type Id = i32;
   let vert_ids = 0..30;
@@ -251,10 +189,32 @@ struct TryToMove(Entity, Dir);
 fn random_movement(es: Query<Entity, With<RandomMovement>>, mut ev: EventWriter<TryToMove>) {
   es.for_each(|e| ev.send(TryToMove(e, pick([[1, 0], [-1, 0], [0, 1], [0, -1]]))));
 }
-fn clamp<T: Ord>(min: T, x: T, max: T) -> T { x.clamp(min, max) }
 use {bevy::prelude::Entity,
      rust_utils::{set, Coll, CollConditions}};
 // 2d physics???
+
+fn spawn_meshes(mut c: Commands,
+                mut meshes: ResMut<Assets<Mesh>>,
+                mut number: ResMut<Number>,
+                mut materials: ResMut<Assets<StandardMaterial>>) {
+  if number.0 < 1 {
+    number.0 += 1;
+    let rand = || rand::random::<f32>();
+    meshes.iter()
+          .for_each(|(id, _)| {
+            let h = meshes.get_handle(id);
+            c.spawn((RigidBody::Dynamic,
+                     Collider::from_bevy_mesh(meshes.get(&h).unwrap(), &ComputedColliderShape::ConvexDecomposition(default())).unwrap(),
+                     Restitution::coefficient(0.7),
+                     PbrBundle { mesh: h,
+                                 material: materials.add(Color::rgb(rand(), rand(), rand()).into()),
+                                 transform: Transform::from_xyz(10.0 + rand(),
+                                                                rand() * 8.0 - 4.0,
+                                                                rand() * 8.0 - 4.0),
+                                 ..default() }));
+          });
+  }
+}
 
 pub fn game_plugin(app: &mut App) {
   app.init_resource::<TileMap>()

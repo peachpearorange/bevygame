@@ -19,11 +19,12 @@ enum Action {
   Run
 }
 fn log_inputs(keys: Res<Input<KeyCode>>) {
-  keys.get_just_pressed()
-      .for_each(|k| println!("{} was pressed!", if k == &KeyCode::F { "F" } else { "Some key" }));
+  keys.get_just_pressed().for_each(|k| {
+                           println!("{} was pressed!",
+                                    if k == &KeyCode::F { "F" } else { "Some key" })
+                         });
 }
-#[bevy_plugin]
-pub fn KeyLogger(app: &mut App) { app.add_system(log_inputs); }
+pub fn keylogger(app: &mut App) { app.add_system(log_inputs); }
 
 // fn esc_quit(keys: Res<Input<KeyCode>>, app: ResMut<App>) {
 //   if keys.pressed(KeyCode::Escape) {

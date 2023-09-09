@@ -6,24 +6,15 @@ pub struct Crafter;
 #[derive(Component)]
 pub struct Conveyor;
 enum KeyFunction {}
-struct KeyMap(HashMap<KeyCode, KeyFunction>);
-struct Action {}
-enum InputState {
+pub struct KeyMap(HashMap<KeyCode, KeyFunction>);
+pub struct Action {}
+pub enum InputState {
   None,
   Number(i32),
   Loop,
   Search,
   Action(Action)
 }
-// #[derive(Hash, Eq, PartialEq)]
-// enum EntityId {
-//   DynamicEntity(u32),
-//   ItemEntity(ItemID),
-//   Tile(i32, i32),
-// }
-// components
-// #[derive(Component)]
-// pub struct Name<'t>(pub &'t str);
 #[derive(Component)]
 pub struct Char(pub char);
 #[derive(Component)]
@@ -47,17 +38,48 @@ pub struct Tile {
   pub bg_color: &'static str
 }
 #[derive(Component)]
-pub struct Fire {
-  pub dir: (i8, i8)
-}
-#[derive(Component)]
 pub struct Combat {
   pub hp: u32,
   pub damage: u32
 }
-#[derive(Default, Component)]
-pub struct Container(pub HashMap<Entity, u32>);
-// pub const CONTAINEREMPTY: Container = Container::default();
+
+#[derive(Component, Default)]
+pub struct Container(pub HashSet<Entity>);
 impl Container {
   pub fn empty() -> Container { Container::default() }
+}
+#[derive(PartialEq, Eq)]
+enum Item {
+  Loot,
+  Wood,
+  Fish
+}
+#[derive(Component)]
+pub struct ItemStack(Item, u32);
+
+#[derive(Component, Hash, Eq, PartialEq, Default, Copy, Clone)]
+pub struct Coord(pub [i32; 2]);
+const ORIGIN: Coord = Coord([0, 0]);
+impl std::ops::Add<Dir> for Coord {
+  type Output = Self;
+  fn add(self, [a, b]: Dir) -> Self { change(self, |[x, y]| [a + x, b + y]) }
+}
+impl std::ops::Sub<Dir> for Coord {
+  type Output = Self;
+  fn sub(self, [a, b]: Dir) -> Self { change(self, |[x, y]| [a - x, b - y]) }
+}
+impl From<(i32, i32)> for Coord {
+  fn from((a, b): (i32, i32)) -> Self { Coord([a, b]) }
+}
+// components
+#[derive(Component, Default)]
+pub struct Name(String);
+#[derive(Component, Default)]
+pub struct Tile {
+  walkable: bool,
+  color: String
+}
+#[derive(Component)]
+pub struct Fire {
+  pub dir: (i8, i8)
 }
