@@ -17,7 +17,9 @@ impl GolWorld {
                                                w.set(a, b, random::<bool>())
                                              })
   }
-  pub fn get(&self, i: usize, j: usize) -> bool { self.0[i][j] }
+  pub fn get(&self, i: usize, j: usize) -> bool {
+    matches!((i, j), (0..SIDE_LENGTH, 0..SIDE_LENGTH)) && self.0[i][j]
+  }
   pub fn set(self, i: usize, j: usize, value: bool) -> Self {
     self.tap_mut(|s| s.0[i][j] = value)
   }

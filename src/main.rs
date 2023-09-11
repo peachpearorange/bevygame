@@ -5,6 +5,8 @@
 #![feature(type_alias_impl_trait)]
 #![allow(unused_mut)]
 
+use loading::loading_plugin;
+
 use {bevy::asset::LoadState, seldom_fn_plugin::FnPluginExt};
 
 use {crate::game::game_plugin,
@@ -13,12 +15,10 @@ use {crate::game::game_plugin,
      bevy_panorbit_camera::PanOrbitCamera};
 
 // pub mod foxtrot;
-pub mod gamething;
-// pub mod tests;
-
-// pub mod bundles;
 pub mod components;
 pub mod game;
+pub mod gamething;
+pub mod tests;
 // pub mod gol;
 // pub mod game2d;
 pub mod input;
@@ -29,20 +29,20 @@ pub mod input;
 pub mod loading;
 pub mod lunarlander3d;
 pub mod menu;
+mod trait_extension;
 // pub mod text2d;
 
 // use bevy_game::GamePlugin; // ToDo: Replace bevy_game with your new crate name.
 use {bevy::{prelude::*, window::PrimaryWindow, winit::WinitWindows, DefaultPlugins},
-     bevy_fps_controller,
+     // bevy_fps_controller,
      bevy_panorbit_camera,
-     bevy_rapier3d::prelude::*,
+     bevy_rapier3d::plugin::RapierPhysicsPlugin,
      // bundles::player,
      rust_utils::comment,
      winit::window::Icon};
 // todo: figure out how to load gltf files
 #[bevy_main]
 pub fn main() {
-  // println!("{}", reverse_string("asdfg".into()));
   App::new()
           .add_plugins(DefaultPlugins.set(AssetPlugin { watch_for_changes: true,
                                                         ..default() })
@@ -60,50 +60,26 @@ pub fn main() {
           // .add_system(rotate_camera)
           .fn_plugin(input::keylogger)
           .fn_plugin(input::get_pressed_keys_plugin)
+          .fn_plugin(tests::tests_plugin)
+          .fn_plugin(loading_plugin)
           .fn_plugin(game_plugin)
-          .add_plugins(PhysicsPlugins::default())
+          .add_plugins(RapierPhysicsPlugin::default())
           // .add_plugin(bevy_fps_controller::controller::FpsControllerPlugin)
           .add_plugin(bevy_panorbit_camera::PanOrbitCameraPlugin)
           // .add_plugin(lunarlander3d::LunarLander)
           // .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
           .add_startup_system(spawn_planets_and_lunar_lander)
           .add_startup_system(spawn_stuff)
-          .add_plugin(loading_plugin)
           .add_plugin(game_plugin)
-          .add_plugin(bevy_egui::EguiPlugin)
-          .add_system(game::ui)
+          // .add_system(game::ui)
           // .add_startup_system(load_lunar_lander)
-          // .add_startup_system(spawn_all_meshes)
-          // .add_startup_system(spawn_all_meshes)
           // .add_startup_system(load_gltf)
           // .add_startup_system(spawn_gltf_objects)
           .run();
 }
-// fn a() {
-//   let mut a: String = "aaa".into();
-//   let mut b: String = "aka".into();
-//   (&mut a, &mut b) = ("a".to_string(), "5".to_string());
-// }
 fn rotate_camera(mut c: Query<&mut Transform, With<Camera>>) {
   c.for_each_mut(|mut c| c.rotate(Quat::from_array([0.3, 0.5, 0.2, 0.6]).normalize()));
 }
-// fn rotate_camera(mut cameras: Query<&mut Transform, With<Camera>>) {
-//   cameras.for_each_mut(|mut c| c.rotate(Quat::from_array([0.3, 0.5, 0.2, 0.6]).normalize()));
-// }
-// impl<T: Bundle> Bundle for Vec<Box<dyn Component>> {
-//   fn component_ids(components: &mut bevy::ecs::component::Components,
-//                    storages: &mut bevy::ecs::storage::Storages,
-//                    ids: &mut impl FnMut(bevy::ecs::component::ComponentId)) {
-//     Component::
-//     todo!()
-//   }
-
-//   unsafe fn from_components<T, F>(ctx: &mut T, func: &mut F) -> Self
-//     where F: for<'a> FnMut(&'a mut T) -> bevy::ptr::OwningPtr<'a>,
-//           Self: Sized {
-//     todo!()
-//   }
-// }
 pub fn world_write_system(world: &mut World) {
   if let Some(player) = world.entity(entity).get_mut::<Player>() {
     // ...
@@ -155,12 +131,4 @@ fn spawn_stuff(mut c: Commands,
                             orbit_smoothness: 0.5,
                             pan_sensitivity: 1.1,
                             ..default() }));
-}
-
-fn reverse_string(mut s: String) -> String {
-  let mut x = String::new();
-  while let Some(c) = s.pop() {
-    x.push(c);
-  }
-  x
 }

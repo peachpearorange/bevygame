@@ -1,70 +1,31 @@
-// use {crate::{bundles::{self, player},
-//              components::{self, RandomMovement},
-//              input,
-//              tiles::{self, Tile, *}},
-//      bevy::{ecs::{schedule, system::WithEntity, world::EntityMut},
-//             gltf::Gltf,
-//             pbr::{ClusterConfig, ClusterFarZMode},
-//             prelude::*,
-//             render::RenderPlugin,
-//             scene::SceneInstance,
-//             utils::HashMap,
-//             window::WindowResolution},
-//      bevy_fps_controller::controller::*,
-//      bevy_rapier3d::{control::KinematicCharacterController,
-//                      parry::query::sat::triangle_segment_find_local_separating_normal_oneway,
-//                      prelude::{NoUserData, RapierPhysicsPlugin},
-//                      render::RapierDebugRenderPlugin},
-//      cascade::cascade,
-//      ndarray::{Array3, ArrayBase},
-//      rand::thread_rng,
-//      rust_utils::{change, coll_max}};
-
-use bevy::render::render_resource::AsBindGroupShaderType;
-
-use {bevy::prelude::*, bevy_panorbit_camera::PanOrbitCamera, bevy_rapier3d::prelude::*};
+use {crate::loading::{Images, Meshes},
+     bevy::{gltf::Gltf, prelude::*, render::render_resource::AsBindGroupShaderType},
+     bevy_panorbit_camera::PanOrbitCamera,
+     bevy_rapier3d::prelude::*};
 
 fn print_ball_altitude(positions: Query<&Transform, With<RigidBody>>) {
   for transform in positions.iter() {
     println!("Ball altitude: {}", transform.translation.y);
   }
 }
-
-type PlanetBundle = (RigidBody,
-   Collider,
-                     Transform
-           PbrBundle { mesh: meshes.add(ico),
-                       transform: local,
-                       ..default() })
-// fn planet(pos:Coord,radius:f32)->
-// struct PlanetBundle{
-//   (RigidBody::Dynamic,
-//            Collider::ball(0.5),
-//            Restitution::coefficient(0.7),
-//            // TransformBundle::from(Transform::from_xyz(0.0, 4.0, 0.0)),
-//            PbrBundle { mesh: meshes.add(ico),
-//                        transform: local,
-//                        ..default() })
-// }
-fn spawn_planets_and_lunar_lander(mut c: Commands,
-                                  mut meshes: ResMut<Assets<Mesh>>,
-                                  assets_gltf: Res<Assets<Gltf>>,
-                                  asset_server: Res<AssetServer>,
-                                  mut materials: ResMut<Assets<StandardMaterial>>) {
-  let planet = |pos:[f32;3],radius:f32| {
-    let mesh_handle = meshes.add(Mesh::try_from(shape::Icosphere { radius: 0.5,
-                                              subdivisions: 20 }).unwrap());
-    let planet_material = StandardMaterial::from(Image);
+pub fn spawn_planets_and_lunar_lander(mut c: Commands,
+                                      // mut meshes: ResMut<Assets<Mesh>>,
+                                      mut images: ResMut<Images>,
+                                      // mut meshes: ResMut<Meshes>,
+                                      // assets_gltf: Res<Assets<Gltf>>,
+                                      asset_server: Res<AssetServer>,
+                                      mut meshes: ResMut<Assets<Mesh>>,
+                                      mut materials: ResMut<Assets<StandardMaterial>>) {
+  let planet = |[x, y, z]: [f32; 3], radius: f32| {
     (RigidBody::Fixed,
      Collider::ball(radius),
-     Transform::from_translation(Vec3::from_array(pos))
-     meshes.ad
-     PbrBundle { mesh: meshes.add(ico),
-                 transform: local,
-                 material: StandardMaterial::,
-
-     })
+     PbrBundle { mesh: meshes.add(Mesh::from(shape::Icosphere { radius,
+                                                                subdivisions: 20 })),
+                 transform: Transform::from_xyz(x, y, z),
+                 material: materials.add(StandardMaterial::from(images.get("planet.png"))),
+                 ..default() })
   };
+  c.spawn(planet([3.4, 5.6, 7.8], 12.0));
 
   /* Create the ground. */
   c.spawn((Collider::cuboid(100.0, 0.1, 100.0),

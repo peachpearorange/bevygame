@@ -72,17 +72,6 @@ use {bevy::prelude::*, leafwing_input_manager::prelude::*};
 //   Left,
 //   Right
 // }
-impl GameControl {
-  pub fn pressed(&self, keyboard_input: &Res<Input<KeyCode>>) -> bool {
-    let p = |k| keyboard_input.pressed(k);
-    match self {
-      GameControl::Up => p(KeyCode::W) || p(KeyCode::Up),
-      GameControl::Down => p(KeyCode::S) || p(KeyCode::Down),
-      GameControl::Left => p(KeyCode::A) || p(KeyCode::Left),
-      GameControl::Right => p(KeyCode::D) || p(KeyCode::Right)
-    }
-  }
-}
 // pub fn get_movement(control: GameControl, input: &Res<Input<KeyCode>>) -> f32 {
 //   if control.pressed(input) {
 //     1.0
@@ -123,4 +112,18 @@ fn get_pressed_keys_system(mut r: ResMut<PressedKeys>, i: Res<Input<KeyCode>>) {
 pub fn get_pressed_keys_plugin(app: &mut App) {
   app.init_resource::<PressedKeys>()
      .add_system(get_pressed_keys_system);
+}
+
+comment! {
+  impl GameControl {
+    pub fn pressed(&self, keyboard_input: &Res<Input<KeyCode>>) -> bool {
+      let p = |k| keyboard_input.pressed(k);
+      match self {
+        GameControl::Up => p(KeyCode::W) || p(KeyCode::Up),
+        GameControl::Down => p(KeyCode::S) || p(KeyCode::Down),
+        GameControl::Left => p(KeyCode::A) || p(KeyCode::Left),
+        GameControl::Right => p(KeyCode::D) || p(KeyCode::Right)
+      }
+    }
+  }
 }

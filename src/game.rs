@@ -8,18 +8,10 @@ use {bevy::{ecs::{schedule,
             scene::SceneInstance,
             utils::{petgraph::algo::matching, HashMap},
             window::WindowResolution},
-     // bevy_ecs_tilemap::{tiles::TileBundle, TilemapBundle},
-     bevy_egui::{self, egui, EguiContexts, EguiPlugin},
-     bevy_fps_controller::controller::*,
-     bevy_inspector_egui::egui::style::Visuals,
-     bevy_rapier2d::prelude::*,
      bevy_rapier3d::{control::KinematicCharacterController,
                      parry::query::sat::triangle_segment_find_local_separating_normal_oneway,
                      prelude::{NoUserData, RapierPhysicsPlugin},
                      render::RapierDebugRenderPlugin},
-     cascade::cascade,
-     itertools::{iterate, Itertools},
-     ndarray::{Array3, ArrayBase},
      rand::thread_rng,
      rust_utils::{add_array, aint, change, comment, sub_array},
      std::{fmt::Debug,
@@ -184,33 +176,30 @@ const VIEW_RADIUS: i32 = 12;
 // impl From<(i32, i32)> for RelPos {
 //   fn from((x, y): (i32, i32)) -> Self { Self([x, y]) }
 // }
-struct TryToMove(Entity, Dir);
-fn random_movement(es: Query<Entity, With<RandomMovement>>, mut ev: EventWriter<TryToMove>) {
-  es.for_each(|e| ev.send(TryToMove(e, pick([[1, 0], [-1, 0], [0, 1], [0, -1]]))));
-}
+// struct TryToMove(Entity, Dir);
+// fn random_movement(es: Query<Entity, With<RandomMovement>>, mut ev: EventWriter<TryToMove>) {
+//   es.for_each(|e| ev.send(TryToMove(e, pick([[1, 0], [-1, 0], [0, 1], [0, -1]]))));
+// }
 use bevy::prelude::Entity;
 // 2d physics???
 
-fn spawn_meshes(mut c: Commands,
-                mut meshes: ResMut<Assets<Mesh>>,
-                mut number: ResMut<Number>,
-                mut materials: ResMut<Assets<StandardMaterial>>) {
-  if number.0 < 1 {
-    number.0 += 1;
+pub fn spawn_meshes(mut c: Commands,
+                    mut meshes: ResMut<Assets<Mesh>>,
+                    mut materials: ResMut<Assets<StandardMaterial>>) {
+  for i in 0..3 {
     let rand = || rand::random::<f32>();
-    meshes.iter()
-          .for_each(|(id, _)| {
-            let h = meshes.get_handle(id);
-            c.spawn((RigidBody::Dynamic,
-                     Collider::from_bevy_mesh(meshes.get(&h).unwrap(), &ComputedColliderShape::ConvexDecomposition(default())).unwrap(),
-                     Restitution::coefficient(0.7),
-                     PbrBundle { mesh: h,
-                                 material: materials.add(Color::rgb(rand(), rand(), rand()).into()),
-                                 transform: Transform::from_xyz(10.0 + rand(),
-                                                                rand() * 8.0 - 4.0,
-                                                                rand() * 8.0 - 4.0),
-                                 ..default() }));
-          });
+    for (id, _) in meshes.iter() {
+      let h = meshes.get_handle(id);
+      c.spawn((RigidBody::Dynamic,
+               Collider::from_bevy_mesh(meshes.get(&h).unwrap(), &ComputedColliderShape::ConvexDecomposition(default())).unwrap(),
+               Restitution::coefficient(0.7),
+               PbrBundle { mesh: h,
+                           material: materials.add(Color::rgb(rand(), rand(), rand()).into()),
+                           transform: Transform::from_xyz(10.0 + rand(),
+                                                          rand() * 8.0 - 4.0,
+                                                          rand() * 8.0 - 4.0),
+                           ..default() }));
+    }
   }
 }
 

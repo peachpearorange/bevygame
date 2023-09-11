@@ -175,16 +175,17 @@ impl Dir {
   fn from_to(orig: &Coord, dest: &Coord) -> Self {
     let Coord([ox, oy]) = orig;
     let Coord([dx, dy]) = dest;
+    type O = Ordering;
     match (dx.cmp(ox), dy.cmp(ox)) {
-      (Less, Less) => Dir::SOUTHWEST,
-      (Less, Equal) => Dir::SOUTH,
-      (Less, Greater) => Dir::NORTHEAST,
-      (Equal, Less) => Dir::SOUTH,
-      (Equal, Equal) => Dir::HERE,
-      (Equal, Greater) => Dir::NORTH,
-      (Greater, Less) => Dir::SOUTHEAST,
-      (Greater, Equal) => Dir::EAST,
-      (Greater, Greater) => Dir::NORTHEAST
+      (O::Less, O::Less) => Dir::SOUTHWEST,
+      (O::Less, O::Equal) => Dir::SOUTH,
+      (O::Less, O::Greater) => Dir::NORTHEAST,
+      (O::Equal, O::Less) => Dir::SOUTH,
+      (O::Equal, O::Equal) => Dir::HERE,
+      (O::Equal, O::Greater) => Dir::NORTH,
+      (O::Greater, O::Less) => Dir::SOUTHEAST,
+      (O::Greater, O::Equal) => Dir::EAST,
+      (O::Greater, O::Greater) => Dir::NORTHEAST
     }
   }
 }
