@@ -3,7 +3,7 @@
 
 use {bevy::{ecs::{query::WorldQuery,
                   system::{SystemParam, SystemState}},
-            prelude::{Color, Component, Entity, Mesh, Query},
+            prelude::*,
             window::ThreadLockedRawWindowHandleWrapper},
      rand::{thread_rng, Rng},
      rust_utils::{change, eager, first, fold, if_match, inc, iproduct, HashMapTrait, Tap,
@@ -14,6 +14,8 @@ use {bevy::{ecs::{query::WorldQuery,
            ops::{Deref, DerefMut}}};
 
 use std::cmp::Ordering;
+
+use bevy::prelude::{Event, EventReader, EventWriter};
 
 use crate::components::*;
 
@@ -80,32 +82,35 @@ const DIMS: usize = 2;
 // systems
 // use {ndarray::Array2, rapl::Ndarr};
 
-fn adjacents(pos: &Coord) -> Vec<Coord> {
+pub fn adjacents(pos: &Coord) -> Vec<Coord> {
   let Coord([x, y]) = pos;
   let around = |v| v - 1..=v + 1;
   iproduct!(around(x), around(y)).map(Coord::from)
                                  .filter(aint(pos))
                                  .collect()
 }
-fn pick<T>(coll: impl IntoIterator<Item = T>) -> T {
+pub fn pick<T>(coll: impl IntoIterator<Item = T>) -> T {
   rand::seq::IteratorRandom::choose(coll.into_iter(), &mut thread_rng()).unwrap()
 }
-fn pick_multiple<T>(coll: impl IntoIterator<Item = T>, n: usize) -> Vec<T> {
+pub fn pick_multiple<T>(coll: impl IntoIterator<Item = T>, n: usize) -> Vec<T> {
   rand::seq::IteratorRandom::choose_multiple(coll.into_iter(), &mut thread_rng(), n)
 }
-fn iterate_until<T>(mut val: T, f: impl Fn(T) -> T, conditionf: impl Fn(&T) -> bool) -> T {
+pub fn iterate_until<T>(mut val: T,
+                        f: impl Fn(T) -> T,
+                        conditionf: impl Fn(&T) -> bool)
+                        -> T {
   while !conditionf(&val) {
     val = f(val);
   }
   val
 }
-fn iterate_n_times<T>(val: T, f: impl Fn(T) -> T, n: u32) -> T {
+pub fn iterate_n_times<T>(val: T, f: impl Fn(T) -> T, n: u32) -> T {
   let (val, _) = iterate_until((val, 0), |(val, k)| (f(val), k + 1), |(_, k)| *k == n);
   val
 }
-use {macro_utils::if_match, rust_utils::comment};
-fn prob(p: f32) -> bool { p > rand::random::<f32>() }
-fn dist(a: [i32; 2], b: [i32; 2]) -> f32 {
+use rust_utils::comment;
+pub fn prob(p: f32) -> bool { p > rand::random::<f32>() }
+pub fn dist(a: [i32; 2], b: [i32; 2]) -> f32 {
   a.iter()
    .zip(b.iter())
    .map(|(w, e)| ((w - e) as f32).powi(2))
@@ -115,22 +120,21 @@ fn dist(a: [i32; 2], b: [i32; 2]) -> f32 {
 const LEVEL_RADIUS: i32 = 100;
 const VIEW_RADIUS: i32 = 12;
 
-fn random_movement(q: Query<Entity, With<RandomMovement>>, mut ew: EventWriter<TryToMove>) {
+pub fn random_movement(q: Query<Entity, With<RandomMovement>>,
+                       mut ew: EventWriter<TryToMove>) {
   ew.send_batch(q.iter().map(|e| TryToMove(e, Dir::random_lateral())));
 }
-fn clamp<T: Ord>(min: T, x: T, max: T) -> T { x.clamp(min, max) }
+pub fn clamp<T: Ord>(min: T, x: T, max: T) -> T { x.clamp(min, max) }
 
 #[derive(Event)]
-struct MoveTowardsCoord(Entity, Coord);
+pub struct MoveTowardsCoord(Entity, Coord);
 fn move_towards_coord(mut er: EventReader<MoveTowardsCoord>,
                       mut ew: EventWriter<TryToMove>,
                       q: Query<&Coord>) {
   ew.send_batch(er.iter().filter_map(|MoveTowardsCoord(e, dest_pos)| {
-                           if let Ok(pos) = q.get(e) {
-                             Some(TryToMove(e, Dir::from_to(pos, dest_pos)))
-                           } else {
-                             None
-                           }
+                           q.get(e)
+                            .ok()
+                            .map(|pos| TryToMove(e, Dir::from_to(pos, &dest_pos)))
                          }));
 }
 fn enemy_movement(mut ewttm: EventWriter<TryToMove>,
@@ -205,7 +209,7 @@ impl From<Dir> for Coord {
   }
 }
 #[derive(Event)]
-struct TryToMove(Entity, Dir);
+pub struct TryToMove(Entity, Dir);
 enum EntityBundle {
   Enemy((Char, Name, EnemyMovement, AttackPlayer, Combat)),
   Dragon((Char, Name, EnemyMovement, DragonAttack, AttackPlayer, Combat)),
@@ -221,7 +225,7 @@ const ENEMY: EB = EB::Enemy((Char('👿'),
 const SPIDER: EB = EB::Enemy((Char('🕷'),
                               name("spider"),
                               EnemyMovement,
-                              AttackPlayerr,
+                              AttackPlayer,
                               Combat { hp: 40, damage: 1 }));
 const DRAGON: EB = EB::Dragon((Char('🐉'),
                                name("dragon"),
@@ -264,7 +268,7 @@ struct TileAndEntitySpawn(Coord, TileBundle, Option<EntityBundle>);
 
 struct TileMap(pub HashMap<Coord, Entity>);
 
-fn generate_2d_level(mut c: Commands, tm: ResMut<TileMap>) {
+pub fn generate_2d_level(mut c: Commands, tm: ResMut<TileMap>) {
   let range = -LEVEL_RADIUS..=LEVEL_RADIUS;
   let coords = iproduct!(range, range).map(Coord::from);
   let things_to_spawn: impl Iterator<Item = TileAndEntitySpawn> =
@@ -379,3 +383,41 @@ comment! {
   }
 
 }
+
+pub fn try_to_move(mut self, pos: &mut Coord, dir: Dir, e: Entity) {
+  let walkable = |c: Coord| self.get_tile::<Tile>(c).unwrap().walkable;
+  // let &pos: &Coord = self.get(e);
+  let m = pos + dir;
+  let dest = if dir.contains(&0) {
+    if self.get_tile::<&Tile>(*pos).unwrap().walkable {
+      m
+    } else {
+      pos
+    }
+  } else {
+    let [l, r] = match dir {
+                   NORTHEAST => [NORTH, EAST],
+                   NORTHWEST => [NORTH, WEST],
+                   SOUTHEAST => [SOUTH, EAST],
+                   SOUTHWEST => [SOUTH, WEST],
+                   _ => panic!()
+                 }.map(|v| *pos + v);
+    let [lw, mw, rw] = [l, m, r].map(walkable);
+    if !lw || !rw {
+      pos
+    } else if !mw {
+      pick([(l, !lw), (r, !rw)].iter().filter(|(_, w)| !w)).0
+    } else {
+      m
+    }
+  };
+  // Aaaaaaaa
+  container_transfer_entity(self.tiles.get_mut(pos), self.tiles.get_mut(dest), e);
+  rust_utils::set(pos, *dest);
+  // self.container_transfer_entity(self.get_tile(pos), self.get_tile(dest), e)
+  //     .set::<Coord>(e, dest)
+  // tm.transfer(&pos, &dest, e);
+
+  // *es.get_component_mut::<Pos>(e).unwrap().into_inner() = dest;
+}
+comment! {}

@@ -1,7 +1,9 @@
 pub use bevy::prelude::Name;
 use bevy::{ecs::system::{SystemParam, SystemState},
            prelude::{Color, Component, Entity, Input, KeyCode, Query, Res, Transform, World},
-           utils::HashMap};
+           utils::{HashMap, HashSet}};
+
+use crate::gamething::Dir;
 #[derive(Component)]
 pub struct Crafter;
 #[derive(Component)]
@@ -68,7 +70,7 @@ impl From<(i32, i32)> for Coord {
   fn from((a, b): (i32, i32)) -> Self { Coord([a, b]) }
 }
 
-fn name(s: &'static str) -> Name { Name::new(s) }
+pub fn name(s: &'static str) -> Name { Name::new(s) }
 // #[derive(Component, Default)]
 // pub struct Name(String);
 #[derive(Component, Default)]

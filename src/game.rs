@@ -10,24 +10,27 @@ use {bevy::{ecs::{schedule,
             window::WindowResolution},
      bevy_rapier3d::{control::KinematicCharacterController,
                      parry::query::sat::triangle_segment_find_local_separating_normal_oneway,
-                     prelude::{NoUserData, RapierPhysicsPlugin},
-                     render::RapierDebugRenderPlugin},
+                     prelude::*, render::RapierDebugRenderPlugin},
      rand::thread_rng,
      rust_utils::{add_array, aint, change, comment, sub_array},
      std::{fmt::Debug,
            ops::{Add, DerefMut, Sub}}};
 
 mod spell {
+  use std::marker::PhantomData;
+
+  use bevy::prelude::Component;
+
   struct Effect<C: Component, F: FnOnce(C) -> C>(F);
-  struct Effects(Vec<Effect>);
+  struct Effects<C: Component, F: FnOnce(C) -> C>(Vec<Effect<C, F>>);
   enum Target {
     Other,
     SelfTarget,
     NoTarget
   }
-  struct Spell {
-    effects: Effects,
-    target: ActionTarget
+  struct Spell<C: Component> {
+    effects: Effects<C, _>,
+    target: Target
   }
 }
 
@@ -139,11 +142,10 @@ impl HelperDataStructure {
 //                                                   });
 //                                         });
 // }
-use {list_comprehension::comp, macro_utils::if_match};
 #[derive(Resource, Default, Deref, DerefMut)]
-struct TileMap(HashMap<Pos, Tile>);
+struct TileMap(HashMap<Coord, Tile>);
 impl TileMap {
-  fn add_entity(&mut self, c: &Pos, e: Entity) {
+  fn add_entity(&mut self, c: &Coord, e: Entity) {
     match self.get_mut(c) {
       Some(tile) => {
         tile.contents.insert(e);
@@ -153,14 +155,14 @@ impl TileMap {
       }
     }
   }
-  fn remove_entity(&mut self, c: &Pos, e: Entity) {
+  fn remove_entity(&mut self, c: &Coord, e: Entity) {
     self.0.get_mut(c).unwrap().contents.remove(&e);
   }
-  fn transfer(&mut self, c1: &Pos, c2: &Pos, e: Entity) {
+  fn transfer(&mut self, c1: &Coord, c2: &Coord, e: Entity) {
     self.remove_entity(c1, e);
     self.add_entity(c2, e)
   }
-  fn is_wall(&self, pos: Pos) -> bool { self.0.get(&pos).unwrap().is_wall }
+  fn is_wall(&self, pos: Coord) -> bool { self.0.get(&pos).unwrap().is_wall }
 }
 fn prob(p: f32) -> bool { p > rand::random::<f32>() }
 fn dist(a: [i32; 2], b: [i32; 2]) -> f32 {
@@ -180,7 +182,11 @@ const VIEW_RADIUS: i32 = 12;
 // fn random_movement(es: Query<Entity, With<RandomMovement>>, mut ev: EventWriter<TryToMove>) {
 //   es.for_each(|e| ev.send(TryToMove(e, pick([[1, 0], [-1, 0], [0, 1], [0, -1]]))));
 // }
-use bevy::prelude::Entity;
+use {bevy::prelude::Entity, bevy_rapier3d::prelude::Collider};
+
+use crate::{components::*,
+            gamething::{generate_2d_level, iterate_n_times, iterate_until, pick,
+                        pick_multiple, random_movement, try_to_move, TryToMove}};
 // 2d physics???
 
 pub fn spawn_meshes(mut c: Commands,
@@ -207,6 +213,6 @@ pub fn game_plugin(app: &mut App) {
   app.init_resource::<TileMap>()
      .add_event::<TryToMove>()
      .add_startup_system(generate_2d_level)
-     .add_system(random_movement)
-     .add_system(try_to_move);
+     .fn_plugin(random_movement)
+     .fn_plugin(try_to_move);
 }

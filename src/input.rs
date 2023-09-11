@@ -1,7 +1,11 @@
-use bevy::{prelude::{Input, KeyCode, Res, *},
-           utils::HashSet};
+use rust_utils::comment;
 
-use bevy::input::{keyboard::keyboard_input_system, InputPlugin};
+use {crate::components::InputState,
+     bevy::{ecs::event::Event,
+            input::{keyboard::keyboard_input_system, InputPlugin},
+            prelude::{Input, KeyCode, Res, *},
+            utils::HashSet}};
+
 fn log_inputs(keys: Res<Input<KeyCode>>) {
   keys.get_just_pressed().for_each(|k| {
                            println!("{} was pressed!",
@@ -10,30 +14,6 @@ fn log_inputs(keys: Res<Input<KeyCode>>) {
 }
 pub fn keylogger(app: &mut App) { app.add_system(log_inputs); }
 
-// fn esc_quit(keys: Res<Input<KeyCode>>, app: ResMut<App>) {
-//   if keys.pressed(KeyCode::Escape) {
-//     app.quit()
-//   }
-// }
-// #[bevy_plugin]
-// pub fn EscQuit(app: &mut App) { app.init_resource::<ResMut<App>>().add_system(esc_quit); }
-// fn jump(query: Query<&InputState<Action>, With<Player>>) {
-//   let action_state = query.single();
-
-//   if action_state.just_pressed(Action::Jump) {
-//     println!("jumping!");
-//   }
-// }
-
-// fn spawn_bundles(mut commands: Commands, bundles: Vec<Box<dyn Bundle>>) {
-//   bundles.for_each(|b| commands.spawn(b));
-// }
-// fn spawn_player(mut commands: Commands) {
-//   commands.spawn(InputBundle { input_map: {
-//                                  InputMap::from_bindings(&[(Action::Jump, KeyCode::Space.into()),
-//                                                            (Action::Run, KeyCode::LeftShift.into())])
-//                                } })
-// }
 use {bevy::prelude::*, leafwing_input_manager::prelude::*};
 
 // fn main() {
@@ -52,32 +32,10 @@ use {bevy::prelude::*, leafwing_input_manager::prelude::*};
 //   commands.spawn(InputManagerBundle::<Action> { // Stores "which actions are currently pressed"
 //                                                 action_state: ActionState::default(),
 //                                                 // Describes how to convert from player inputs into those actions
-//                                                 input_map: InputMap::new([(KeyCode::Space,
-//                                                                            Action::Jump)]) })
+//                                                 input_map:
+//                                                   InputMap::new([(KeyCode::Space,
+//                                                                   Action::Jump)]) })
 //           .insert(Player);
-// }
-
-// Query for the `ActionState` component in your game logic systems!
-// fn jump(query: Query<&ActionState<Action>, With<Player>>) {
-//   let action_state = query.single();
-//   // Each action has a button-like state of its own that you can check
-//   if action_state.just_pressed(Action::Jump) {
-//     println!("I'm jumping!");
-//   }
-// }
-
-// pub enum GameControl {
-//   Up,
-//   Down,
-//   Left,
-//   Right
-// }
-// pub fn get_movement(control: GameControl, input: &Res<Input<KeyCode>>) -> f32 {
-//   if control.pressed(input) {
-//     1.0
-//   } else {
-//     0.0
-//   }
 // }
 
 // This plugin listens for keyboard input and converts the input into Actions
