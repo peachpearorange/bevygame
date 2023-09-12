@@ -1,4 +1,5 @@
-use bevy::asset::{Asset, HandleId};
+use bevy::{asset::{Asset, HandleId},
+           utils::HashMap};
 
 // bevy_rapier3d::prelude::*
 use {crate::comment, bevy::gltf::Gltf};
@@ -31,21 +32,22 @@ fn load_meshes(asset_server: Res<AssetServer>) {
 }
 #[derive(AssetCollection, Resource)]
 pub struct Meshes {
-  #[asset(path = "assets/meshes", key = "files_typed", collection(typed, mapped))]
+  // , key = "files_typed"
+  #[asset(path = "assets/meshes", collection(typed, mapped))]
   images_by_path: HashMap<String, Handle<Mesh>>
 }
 #[derive(AssetCollection, Resource)]
 pub struct Images {
-  #[asset(path = "assets/images", key = "files_typed", collection(typed, mapped))]
+  // , key = "files_typed"
+  #[asset(path = "assets/images", collection(typed, mapped))]
   images_by_path: HashMap<String, Handle<Image>>
 }
 pub fn loading_plugin(app: &mut App) {
-  app.init_collection::<Images>()
-     .init_collection::<Meshes>()
-     .add_startup_system(load_meshes)
-     .add_startup_system(load_images)
-     .init_resource::<Number>()
-     .add_system(spawn_meshes);
+  app.init_collection::<Images>().init_collection::<Meshes>();
+  // .add_startup_system(load_meshes)
+  // .add_startup_system(load_images)
+  // .init_resource::<Number>()
+  // .add_system(spawn_meshes)
 }
 pub mod Squirrel {
 

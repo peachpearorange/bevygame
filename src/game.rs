@@ -172,16 +172,7 @@ fn dist(a: [i32; 2], b: [i32; 2]) -> f32 {
    .sum::<f32>()
    .sqrt()
 }
-const LEVEL_RADIUS: i32 = 100;
-const VIEW_RADIUS: i32 = 12;
 
-// impl From<(i32, i32)> for RelPos {
-//   fn from((x, y): (i32, i32)) -> Self { Self([x, y]) }
-// }
-// struct TryToMove(Entity, Dir);
-// fn random_movement(es: Query<Entity, With<RandomMovement>>, mut ev: EventWriter<TryToMove>) {
-//   es.for_each(|e| ev.send(TryToMove(e, pick([[1, 0], [-1, 0], [0, 1], [0, -1]]))));
-// }
 use {bevy::prelude::Entity, bevy_rapier3d::prelude::Collider};
 
 use crate::{components::*,

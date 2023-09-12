@@ -75,8 +75,8 @@ pub fn name(s: &'static str) -> Name { Name::new(s) }
 // pub struct Name(String);
 #[derive(Component, Default)]
 pub struct Tile {
-  walkable: bool,
-  color: Color
+  pub walkable: bool,
+  pub color: Color
 }
 #[derive(Component)]
 pub struct Fire {

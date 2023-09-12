@@ -172,6 +172,11 @@ const WEST: Dir = Dir::WEST;
 const NORTHWEST: Dir = Dir::NORTHWEST;
 const HERE: Dir = Dir::HERE;
 impl Dir {
+  fn is_diagonal(&self) -> bool {
+    matches!(self,
+             Dir::NORTHEAST | Dir::SOUTHEAST | Dir::SOUTHWEST | Dir::NORTHWEST)
+  }
+  // fn is_diagonal(&self) -> bool {}
   fn random_lateral() -> Dir { pick([Dir::EAST, Dir::NORTH, Dir::WEST, Dir::SOUTH]) }
   fn random() -> Dir {
     pick([NORTH, NORTHEAST, EAST, SOUTHEAST, SOUTH, SOUTHWEST, WEST, NORTHWEST, HERE])
@@ -309,6 +314,43 @@ pub fn generate_2d_level(mut c: Commands, tm: ResMut<TileMap>) {
   }
 }
 
+#[derive(Resource)]
+pub struct Tiles(pub HashMap<Coord, Entity>);
+pub fn try_to_move(er: EventReader<TryToMove>,
+                   tiles: ResMut<Tiles>,
+                   contq: Query<&mut Container, With<Tile>>,
+                   tileq: Query<&Tile>,
+                   coordq: Query<&mut Coord>) {
+  let get_tile_container_mut = |c: &Coord| contq.get_mut(tiles.0.get(c)).unwrap().as_mut();
+  let is_walkable = |c: &Coord| tileq.get(tiles.0.get(c).unwrap()).unwrap().walkable;
+  for TryToMove(e, dir) in er.iter() {
+    if let Ok(pos) = coordq.get_mut(e) {
+      let m = *pos + dir;
+      let dest = if let Some(dirs) = match dir {
+        NORTHEAST => Some([NORTH, EAST]),
+        NORTHWEST => Some([NORTH, WEST]),
+        SOUTHEAST => Some([SOUTH, EAST]),
+        SOUTHWEST => Some([SOUTH, WEST]),
+        _ => None
+      } {
+        let [l, r] = dirs.map(|d| *pos + d);
+        let [lw, mw, rw] = [l, m, r].map(is_walkable);
+        if_match!(!lw && !rw => *pos,
+                  !mw => pick([(l, lw), (r, rw)].iter().filter(|(_, w)| w)).0,
+                  else => m )
+      } else {
+        if is_walkable(&m) {
+          m
+        } else {
+          *pos
+        }
+      };
+      get_tile_container_mut(&pos).0.remove(e);
+      get_tile_container_mut(&dest).0.insert(e);
+      *pos = dest;
+    }
+  }
+}
 comment! {
   #[derive(Hash, Eq, PartialEq, Copy, Clone)]
   enum CurrentView {
@@ -383,41 +425,3 @@ comment! {
   }
 
 }
-
-pub fn try_to_move(mut self, pos: &mut Coord, dir: Dir, e: Entity) {
-  let walkable = |c: Coord| self.get_tile::<Tile>(c).unwrap().walkable;
-  // let &pos: &Coord = self.get(e);
-  let m = pos + dir;
-  let dest = if dir.contains(&0) {
-    if self.get_tile::<&Tile>(*pos).unwrap().walkable {
-      m
-    } else {
-      pos
-    }
-  } else {
-    let [l, r] = match dir {
-                   NORTHEAST => [NORTH, EAST],
-                   NORTHWEST => [NORTH, WEST],
-                   SOUTHEAST => [SOUTH, EAST],
-                   SOUTHWEST => [SOUTH, WEST],
-                   _ => panic!()
-                 }.map(|v| *pos + v);
-    let [lw, mw, rw] = [l, m, r].map(walkable);
-    if !lw || !rw {
-      pos
-    } else if !mw {
-      pick([(l, !lw), (r, !rw)].iter().filter(|(_, w)| !w)).0
-    } else {
-      m
-    }
-  };
-  // Aaaaaaaa
-  container_transfer_entity(self.tiles.get_mut(pos), self.tiles.get_mut(dest), e);
-  rust_utils::set(pos, *dest);
-  // self.container_transfer_entity(self.get_tile(pos), self.get_tile(dest), e)
-  //     .set::<Coord>(e, dest)
-  // tm.transfer(&pos, &dest, e);
-
-  // *es.get_component_mut::<Pos>(e).unwrap().into_inner() = dest;
-}
-comment! {}
